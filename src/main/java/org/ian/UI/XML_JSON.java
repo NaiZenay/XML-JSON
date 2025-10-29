@@ -194,9 +194,11 @@ public class XML_JSON extends JFrame{
         JLConcurrentTaks.setText("Tareas: 0/0");
         JLConcurrentActive.setText("Hilos activos: 0");
         JLConcurrentProgress.setText("Progreso: 0%");
+        JLPoolParallelism.setText("Paralelismo: -");
         JLPoolSize.setText("Tamaño pool: -");
         JLPoolActive.setText("Activos: -");
         JLPoolRunning.setText("Ejecutando: -");
+        JLPoolSteals.setText("Robos: -");
     }
 
     private void updateConcurrentStats(boolean isFinal) {
@@ -217,9 +219,11 @@ public class XML_JSON extends JFrame{
         double progress = monitor.getProgress();
         JLConcurrentProgress.setText(String.format("Progreso: %.1f%%", progress));
         // Estadísticas del pool
+        JLPoolParallelism.setText("Paralelismo: " + poolStats.getParallelism());
         JLPoolSize.setText("Tamaño pool: " + poolStats.getPoolSize());
         JLPoolActive.setText("Activos: " + poolStats.getActiveThreadCount());
         JLPoolRunning.setText("Ejecutando: " + poolStats.getRunningThreadCount());
+        JLPoolSteals.setText("Robos: " + poolStats.getStealCount());
     }
 
 }

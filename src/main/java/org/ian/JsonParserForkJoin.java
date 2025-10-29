@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 public class JsonParserForkJoin {
 
@@ -337,33 +338,33 @@ public class JsonParserForkJoin {
                     String key = sanitizeTagName(entry.getKey());
                     Object val = entry.getValue();
 
-                    RecursiveTask<String> task = new RecursiveTask<String>() {
-                        @Override
-                        protected String compute() {
-                            StringBuilder sb = new StringBuilder();
+                    String finalKey = key;
+                    Object finalVal = val;
+
+                    RecursiveTask<String> task = createMonitoredTask(() -> {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(indent(level));
+                        sb.append("<").append(finalKey).append(">");
+
+                        if (finalVal instanceof Map) {
+                            sb.append("\n");
+                            XmlConversionTask subtask = new XmlConversionTask(finalVal, finalKey, level + 1, monitor);
+                            sb.append(subtask.compute());
                             sb.append(indent(level));
-                            sb.append("<").append(key).append(">");
-
-                            if (val instanceof Map) {
-                                sb.append("\n");
-                                XmlConversionTask subtask = new XmlConversionTask(val, key, level + 1, monitor);
-                                sb.append(subtask.compute());
-                                sb.append(indent(level));
-                                sb.append("</").append(key).append(">\n");
-                            } else if (val instanceof List) {
-                                sb.append("\n");
-                                sb.append(convertListWithName((List<Object>) val, key));
-                                sb.append(indent(level));
-                                sb.append("</").append(key).append(">\n");
-                            } else {
-                                XmlConversionTask subtask = new XmlConversionTask(val, key, level, monitor);
-                                sb.append(subtask.compute());
-                                sb.append("</").append(key).append(">\n");
-                            }
-
-                            return sb.toString();
+                            sb.append("</").append(finalKey).append(">\n");
+                        } else if (finalVal instanceof List) {
+                            sb.append("\n");
+                            sb.append(convertListWithName((List<Object>) finalVal, finalKey));
+                            sb.append(indent(level));
+                            sb.append("</").append(finalKey).append(">\n");
+                        } else {
+                            XmlConversionTask subtask = new XmlConversionTask(finalVal, finalKey, level, monitor);
+                            sb.append(subtask.compute());
+                            sb.append("</").append(finalKey).append(">\n");
                         }
-                    };
+
+                        return sb.toString();
+                    });
 
                     subtasks.add(task);
                     task.fork();
@@ -416,28 +417,26 @@ public class JsonParserForkJoin {
                 List<RecursiveTask<String>> subtasks = new ArrayList<>();
 
                 for (Object item : list) {
-                    RecursiveTask<String> task = new RecursiveTask<String>() {
-                        @Override
-                        protected String compute() {
-                            StringBuilder sb = new StringBuilder();
+                    Object finalItem = item;
+                    RecursiveTask<String> task = createMonitoredTask(() -> {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(indent(level + 1));
+                        sb.append("<").append(singularName).append(">");
+
+                        if (finalItem instanceof Map || finalItem instanceof List) {
+                            sb.append("\n");
+                            XmlConversionTask subtask = new XmlConversionTask(finalItem, singularName, level + 2, monitor);
+                            sb.append(subtask.compute());
                             sb.append(indent(level + 1));
-                            sb.append("<").append(singularName).append(">");
-
-                            if (item instanceof Map || item instanceof List) {
-                                sb.append("\n");
-                                XmlConversionTask subtask = new XmlConversionTask(item, singularName, level + 2, monitor);
-                                sb.append(subtask.compute());
-                                sb.append(indent(level + 1));
-                                sb.append("</").append(singularName).append(">\n");
-                            } else {
-                                XmlConversionTask subtask = new XmlConversionTask(item, singularName, level + 1, monitor);
-                                sb.append(subtask.compute());
-                                sb.append("</").append(singularName).append(">\n");
-                            }
-
-                            return sb.toString();
+                            sb.append("</").append(singularName).append(">\n");
+                        } else {
+                            XmlConversionTask subtask = new XmlConversionTask(finalItem, singularName, level + 1, monitor);
+                            sb.append(subtask.compute());
+                            sb.append("</").append(singularName).append(">\n");
                         }
-                    };
+
+                        return sb.toString();
+                    });
 
                     subtasks.add(task);
                     task.fork();
@@ -502,6 +501,22 @@ public class JsonParserForkJoin {
             }
 
             return plural;
+        }
+
+        private <T> RecursiveTask<T> createMonitoredTask(Supplier<T> action) {
+            return new RecursiveTask<T>() {
+                @Override
+                protected T compute() {
+                    monitor.incrementTasksCreated();
+                    monitor.incrementActiveThreads();
+                    try {
+                        return action.get();
+                    } finally {
+                        monitor.decrementActiveThreads();
+                        monitor.incrementTasksCompleted();
+                    }
+                }
+            };
         }
     }
 
