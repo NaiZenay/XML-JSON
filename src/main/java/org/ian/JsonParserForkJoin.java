@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 public class JsonParserForkJoin {
 
@@ -15,7 +16,7 @@ public class JsonParserForkJoin {
     private static final int THRESHOLD_LIST_SIZE = 10;
 
     public JsonParserForkJoin() {
-        this(ForkJoinPool.commonPool());
+        this(Math.max(2, Runtime.getRuntime().availableProcessors()));
     }
 
     public JsonParserForkJoin(int parallelism) {
@@ -87,18 +88,17 @@ public class JsonParserForkJoin {
             this.json = json;
             this.monitor = monitor;
             this.pos = 0;
+            this.monitor.taskScheduled();
         }
 
         @Override
         protected Object compute() {
-            monitor.incrementTasksCreated();
-            monitor.incrementActiveThreads();
+            monitor.taskStarted();
 
             try {
                 return parseValue();
             } finally {
-                monitor.decrementActiveThreads();
-                monitor.incrementTasksCompleted();
+                monitor.taskFinished();
             }
         }
 
@@ -301,12 +301,12 @@ public class JsonParserForkJoin {
             this.tagName = tagName;
             this.level = level;
             this.monitor = monitor;
+            this.monitor.taskScheduled();
         }
 
         @Override
         protected String compute() {
-            monitor.incrementTasksCreated();
-            monitor.incrementActiveThreads();
+            monitor.taskStarted();
 
             try {
                 if (value == null) {
@@ -321,8 +321,7 @@ public class JsonParserForkJoin {
                     return escapeXML(String.valueOf(value));
                 }
             } finally {
-                monitor.decrementActiveThreads();
-                monitor.incrementTasksCompleted();
+                monitor.taskFinished();
             }
         }
 
@@ -337,33 +336,33 @@ public class JsonParserForkJoin {
                     String key = sanitizeTagName(entry.getKey());
                     Object val = entry.getValue();
 
-                    RecursiveTask<String> task = new RecursiveTask<String>() {
-                        @Override
-                        protected String compute() {
-                            StringBuilder sb = new StringBuilder();
+                    String finalKey = key;
+                    Object finalVal = val;
+
+                    RecursiveTask<String> task = createMonitoredTask(() -> {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(indent(level));
+                        sb.append("<").append(finalKey).append(">");
+
+                        if (finalVal instanceof Map) {
+                            sb.append("\n");
+                            XmlConversionTask subtask = new XmlConversionTask(finalVal, finalKey, level + 1, monitor);
+                            sb.append(subtask.compute());
                             sb.append(indent(level));
-                            sb.append("<").append(key).append(">");
-
-                            if (val instanceof Map) {
-                                sb.append("\n");
-                                XmlConversionTask subtask = new XmlConversionTask(val, key, level + 1, monitor);
-                                sb.append(subtask.compute());
-                                sb.append(indent(level));
-                                sb.append("</").append(key).append(">\n");
-                            } else if (val instanceof List) {
-                                sb.append("\n");
-                                sb.append(convertListWithName((List<Object>) val, key));
-                                sb.append(indent(level));
-                                sb.append("</").append(key).append(">\n");
-                            } else {
-                                XmlConversionTask subtask = new XmlConversionTask(val, key, level, monitor);
-                                sb.append(subtask.compute());
-                                sb.append("</").append(key).append(">\n");
-                            }
-
-                            return sb.toString();
+                            sb.append("</").append(finalKey).append(">\n");
+                        } else if (finalVal instanceof List) {
+                            sb.append("\n");
+                            sb.append(convertListWithName((List<Object>) finalVal, finalKey));
+                            sb.append(indent(level));
+                            sb.append("</").append(finalKey).append(">\n");
+                        } else {
+                            XmlConversionTask subtask = new XmlConversionTask(finalVal, finalKey, level, monitor);
+                            sb.append(subtask.compute());
+                            sb.append("</").append(finalKey).append(">\n");
                         }
-                    };
+
+                        return sb.toString();
+                    });
 
                     subtasks.add(task);
                     task.fork();
@@ -416,28 +415,26 @@ public class JsonParserForkJoin {
                 List<RecursiveTask<String>> subtasks = new ArrayList<>();
 
                 for (Object item : list) {
-                    RecursiveTask<String> task = new RecursiveTask<String>() {
-                        @Override
-                        protected String compute() {
-                            StringBuilder sb = new StringBuilder();
+                    Object finalItem = item;
+                    RecursiveTask<String> task = createMonitoredTask(() -> {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(indent(level + 1));
+                        sb.append("<").append(singularName).append(">");
+
+                        if (finalItem instanceof Map || finalItem instanceof List) {
+                            sb.append("\n");
+                            XmlConversionTask subtask = new XmlConversionTask(finalItem, singularName, level + 2, monitor);
+                            sb.append(subtask.compute());
                             sb.append(indent(level + 1));
-                            sb.append("<").append(singularName).append(">");
-
-                            if (item instanceof Map || item instanceof List) {
-                                sb.append("\n");
-                                XmlConversionTask subtask = new XmlConversionTask(item, singularName, level + 2, monitor);
-                                sb.append(subtask.compute());
-                                sb.append(indent(level + 1));
-                                sb.append("</").append(singularName).append(">\n");
-                            } else {
-                                XmlConversionTask subtask = new XmlConversionTask(item, singularName, level + 1, monitor);
-                                sb.append(subtask.compute());
-                                sb.append("</").append(singularName).append(">\n");
-                            }
-
-                            return sb.toString();
+                            sb.append("</").append(singularName).append(">\n");
+                        } else {
+                            XmlConversionTask subtask = new XmlConversionTask(finalItem, singularName, level + 1, monitor);
+                            sb.append(subtask.compute());
+                            sb.append("</").append(singularName).append(">\n");
                         }
-                    };
+
+                        return sb.toString();
+                    });
 
                     subtasks.add(task);
                     task.fork();
@@ -503,6 +500,21 @@ public class JsonParserForkJoin {
 
             return plural;
         }
+
+        private <T> RecursiveTask<T> createMonitoredTask(Supplier<T> action) {
+            monitor.taskScheduled();
+            return new RecursiveTask<T>() {
+                @Override
+                protected T compute() {
+                    monitor.taskStarted();
+                    try {
+                        return action.get();
+                    } finally {
+                        monitor.taskFinished();
+                    }
+                }
+            };
+        }
     }
 
     // ========== MONITOR DE EJECUCIÓN ==========
@@ -533,20 +545,17 @@ public class JsonParserForkJoin {
             isExecuting = false;
         }
 
-        void incrementTasksCreated() {
+        void taskScheduled() {
             tasksCreated.incrementAndGet();
         }
 
-        void incrementTasksCompleted() {
-            tasksCompleted.incrementAndGet();
-        }
-
-        void incrementActiveThreads() {
+        void taskStarted() {
             activeThreads.incrementAndGet();
         }
 
-        void decrementActiveThreads() {
+        void taskFinished() {
             activeThreads.decrementAndGet();
+            tasksCompleted.incrementAndGet();
         }
 
         public int getTasksCreated() {
@@ -588,43 +597,44 @@ public class JsonParserForkJoin {
         }
     }
 
-public static class PoolStats {
-    private final int parallelism;
-    private final int poolSize;
-    private final int activeThreadCount;
-    private final int runningThreadCount;
-    private final long queuedSubmissionCount;
-    private final long queuedTaskCount;
-    private final long stealCount;
-    private final boolean isQuiescent;
+    public static class PoolStats {
+        private final int parallelism;
+        private final int poolSize;
+        private final int activeThreadCount;
+        private final int runningThreadCount;
+        private final long queuedSubmissionCount;
+        private final long queuedTaskCount;
+        private final long stealCount;
+        private final boolean isQuiescent;
 
-    public PoolStats(ForkJoinPool pool) {
-        this.parallelism = pool.getParallelism();
-        this.poolSize = pool.getPoolSize();
-        this.activeThreadCount = pool.getActiveThreadCount();
-        this.runningThreadCount = pool.getRunningThreadCount();
-        this.queuedSubmissionCount = pool.getQueuedSubmissionCount();
-        this.queuedTaskCount = pool.getQueuedTaskCount();
-        this.stealCount = pool.getStealCount();
-        this.isQuiescent = pool.isQuiescent();
+        public PoolStats(ForkJoinPool pool) {
+            this.parallelism = pool.getParallelism();
+            this.poolSize = pool.getPoolSize();
+            this.activeThreadCount = pool.getActiveThreadCount();
+            this.runningThreadCount = pool.getRunningThreadCount();
+            this.queuedSubmissionCount = pool.getQueuedSubmissionCount();
+            this.queuedTaskCount = pool.getQueuedTaskCount();
+            this.stealCount = pool.getStealCount();
+            this.isQuiescent = pool.isQuiescent();
+        }
+
+        public int getParallelism() { return parallelism; }
+        public int getPoolSize() { return poolSize; }
+        public int getActiveThreadCount() { return activeThreadCount; }
+        public int getRunningThreadCount() { return runningThreadCount; }
+        public long getQueuedSubmissionCount() { return queuedSubmissionCount; }
+        public long getQueuedTaskCount() { return queuedTaskCount; }
+        public long getStealCount() { return stealCount; }
+        public boolean isQuiescent() { return isQuiescent; }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "PoolStats[parallelism=%d, poolSize=%d, active=%d, running=%d, " +
+                            "queuedSubmissions=%d, queuedTasks=%d, steals=%d, quiescent=%s]",
+                    parallelism, poolSize, activeThreadCount, runningThreadCount,
+                    queuedSubmissionCount, queuedTaskCount, stealCount, isQuiescent
+            );
+        }
     }
-
-    public int getParallelism() { return parallelism; }
-    public int getPoolSize() { return poolSize; }
-    public int getActiveThreadCount() { return activeThreadCount; }
-    public int getRunningThreadCount() { return runningThreadCount; }
-    public long getQueuedSubmissionCount() { return queuedSubmissionCount; }
-    public long getQueuedTaskCount() { return queuedTaskCount; }
-    public long getStealCount() { return stealCount; }
-    public boolean isQuiescent() { return isQuiescent; }
-
-    @Override
-    public String toString() {
-        return String.format(
-                "PoolStats[parallelism=%d, poolSize=%d, active=%d, running=%d, " +
-                        "queuedSubmissions=%d, queuedTasks=%d, steals=%d, quiescent=%s]",
-                parallelism, poolSize, activeThreadCount, runningThreadCount,
-                queuedSubmissionCount, queuedTaskCount, stealCount, isQuiescent
-        );
-    }
-}}
+}
