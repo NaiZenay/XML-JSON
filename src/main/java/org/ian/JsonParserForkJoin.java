@@ -502,15 +502,16 @@ public class JsonParserForkJoin {
         }
 
         private <T> RecursiveTask<T> createMonitoredTask(Supplier<T> action) {
-            monitor.taskScheduled();
             return new RecursiveTask<T>() {
                 @Override
                 protected T compute() {
-                    monitor.taskStarted();
+                    monitor.incrementTasksCreated();
+                    monitor.incrementActiveThreads();
                     try {
                         return action.get();
                     } finally {
-                        monitor.taskFinished();
+                        monitor.decrementActiveThreads();
+                        monitor.incrementTasksCompleted();
                     }
                 }
             };
