@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="org.ian.UI.XML_JSON">
+  <grid id="27dc6" binding="JPMain" layout-manager="GridLayoutManager" row-count="11" column-count="9" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="20" left="20" bottom="20" right="20"/>
+    <constraints>
+      <xy x="20" y="20" width="891" height="674"/>
+    </constraints>
+    <properties>
+      <background color="-14540254"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <component id="4317b" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="9" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="false"/>
+          <font name="JetBrains Mono" size="26" style="1"/>
+          <foreground color="-1"/>
+          <text value="Converción de archivos JSON a XML"/>
+        </properties>
+      </component>
+      <component id="53a06" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="0" row-span="7" col-span="1" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="18" style="1"/>
+          <foreground color="-1"/>
+          <text value="JSON"/>
+        </properties>
+      </component>
+      <scrollpane id="6a5df">
+        <constraints>
+          <grid row="2" column="1" row-span="6" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <horizontalScrollBarPolicy value="31"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="c4c38" class="javax.swing.JTextArea" binding="JTAJson">
+            <constraints/>
+            <properties>
+              <background color="-14408668"/>
+              <columns value="50"/>
+              <foreground color="-1"/>
+              <lineWrap value="true"/>
+              <rows value="50"/>
+              <wrapStyleWord value="true"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+      <vspacer id="448f">
+        <constraints>
+          <grid row="8" column="1" row-span="1" col-span="8" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
+      <component id="8fde3" class="javax.swing.JLabel" binding="JLMessage">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="8" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="18" style="1"/>
+          <foreground color="-1735879"/>
+          <text value=""/>
+          <visible value="true"/>
+        </properties>
+      </component>
+      <component id="177cb" class="javax.swing.JButton" binding="JBConcurrentConvertion">
+        <constraints>
+          <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="120" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-14408668"/>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="false"/>
+          <defaultCapable value="true"/>
+          <focusPainted value="false"/>
+          <font name="JetBrains Mono" size="12" style="1"/>
+          <foreground color="-1"/>
+          <label value="Convertir (Concurrencia)"/>
+          <opaque value="false"/>
+          <text value="Convertir (Concurrencia)"/>
+        </properties>
+      </component>
+      <component id="ebdc3" class="javax.swing.JButton" binding="JBConvertion">
+        <constraints>
+          <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="120" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-14408668"/>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="false"/>
+          <defaultCapable value="true"/>
+          <focusPainted value="false"/>
+          <font name="JetBrains Mono" size="12" style="1"/>
+          <foreground color="-1"/>
+          <opaque value="false"/>
+          <text value="Convertir"/>
+        </properties>
+      </component>
+      <component id="db65f" class="javax.swing.JButton" binding="JBCopy">
+        <constraints>
+          <grid row="10" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="120" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-14408668"/>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="false"/>
+          <defaultCapable value="true"/>
+          <enabled value="false"/>
+          <focusPainted value="false"/>
+          <font name="JetBrains Mono" size="12" style="1"/>
+          <foreground color="-1"/>
+          <label value="Copiar"/>
+          <opaque value="false"/>
+          <text value="Copiar"/>
+        </properties>
+      </component>
+      <component id="efdd6" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="18" style="1"/>
+          <foreground color="-1"/>
+          <text value="Secuencial"/>
+        </properties>
+      </component>
+      <component id="ec4a6" class="javax.swing.JLabel" binding="JLNormalTime">
+        <constraints>
+          <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Tiempo: -"/>
+        </properties>
+      </component>
+      <component id="a8f71" class="javax.swing.JLabel" binding="JLNormalStatus">
+        <constraints>
+          <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Estado: Inactivo"/>
+        </properties>
+      </component>
+      <component id="cee1e" class="javax.swing.JLabel" binding="JLConcurrentTime">
+        <constraints>
+          <grid row="3" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Tiempo: - ms"/>
+        </properties>
+      </component>
+      <component id="8722d" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="6" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="18" style="1"/>
+          <foreground color="-1"/>
+          <text value="Concurrente"/>
+        </properties>
+      </component>
+      <component id="74c65" class="javax.swing.JLabel" binding="JLConcurrentTaks">
+        <constraints>
+          <grid row="4" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Tareas 0/0"/>
+        </properties>
+      </component>
+      <component id="96e58" class="javax.swing.JLabel" binding="JLConcurrentActive">
+        <constraints>
+          <grid row="7" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Hilos Activos: 0"/>
+        </properties>
+      </component>
+      <component id="b5440" class="javax.swing.JLabel" binding="JLConcurrentProgress">
+        <constraints>
+          <grid row="5" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Progreso: 0%"/>
+        </properties>
+      </component>
+      <component id="9c74e" class="javax.swing.JLabel" binding="JLPoolParallelism">
+        <constraints>
+          <grid row="3" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Paralelismo: -"/>
+        </properties>
+      </component>
+      <component id="e3caf" class="javax.swing.JLabel" binding="JLPoolRunning">
+        <constraints>
+          <grid row="6" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Ejecutando: -"/>
+        </properties>
+      </component>
+      <component id="177ad" class="javax.swing.JLabel" binding="JLPoolSize">
+        <constraints>
+          <grid row="4" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Tamaño Pool: -"/>
+        </properties>
+      </component>
+      <component id="3e673" class="javax.swing.JLabel" binding="JLPoolActive">
+        <constraints>
+          <grid row="5" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="73" height="17"/>
+          </grid>
+        </constraints>
+        <properties>
+          <font name="JetBrains Mono" size="12" style="0"/>
+          <foreground color="-1"/>
+          <text value="Activos: -"/>
+        </properties>
+      </component>
+      <hspacer id="763ea">
+        <constraints>
+          <grid row="3" column="7" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </hspacer>
+      <hspacer id="2f284">
+        <constraints>
+          <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </hspacer>
+      <hspacer id="91583">
+        <constraints>
+          <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </hspacer>
+    </children>
+  </grid>
+</form>
